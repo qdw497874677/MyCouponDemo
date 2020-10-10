@@ -1,0 +1,17 @@
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\constant\PeriodType.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\constant\GoodsType.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\vo\GoodsInfo.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\conf\WebConfiguration.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\vo\SettlementInfo.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\constant\CouponCategory.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\vo\TemplateRule.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\annotation\IgnoreResponseAdvice.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\constant\DistributeTarget.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\vo\CommonResponse.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\advice\CommonResponseDataAdvice.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\exception\CouponException.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\advice\GlobalExceptionAdvice.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\vo\CouponTemplateSDK.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\constant\ProductLine.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\constant\Constant.java
+D:\java工作空间\imooc-coupon-master\imooc-coupon\imooc-coupon\imooc-coupon-service\coupon-common\src\main\java\com\imooc\coupon\conf\JacksonConfig.java
