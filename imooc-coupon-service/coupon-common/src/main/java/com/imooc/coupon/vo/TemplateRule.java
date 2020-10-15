@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * <h1>优惠券规则对象定义</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor
@@ -51,12 +50,12 @@ public class TemplateRule {
         /** 有效期规则, 对应 PeriodType 的 code 字段 */
         private Integer period;
 
-        /** 有效间隔: 只对变动性有效期有效 */
+        /** 有效间隔: 只有作为可变型的有效期才有效*/
         private Integer gap;
 
-        /** 优惠券模板的失效日期, 两类规则都有效 */
+        /** 优惠券模板的失效日期, 两类规则都有效，如果gap有效，真正失效日期取两个最小 */
         private Long deadline;
-
+        // 验证优惠券是否有效，而不是检验过期，是否过期在之后定时任务中去处理
         boolean validate() {
             // 最简化校验
             return null != PeriodType.of(period) && gap > 0 && deadline > 0;
@@ -71,7 +70,7 @@ public class TemplateRule {
     @AllArgsConstructor
     public static class Discount {
 
-        /** 额度: 满减(20), 折扣(85), 立减(10) */
+        /** 额度: 满减(20), 折扣(85), 立减(10) ，需要配合折扣类型*/
         private Integer quota;
 
         /** 基准, 需要满多少才可用 */
@@ -97,7 +96,7 @@ public class TemplateRule {
         /** 城市 */
         private String city;
 
-        /** 商品类型, list[文娱, 生鲜, 家居, 全品类] */
+        /** 商品类型, list[文娱, 生鲜, 家居, 全品类] 是一个list的JSON*/
         private String goodsType;
 
         boolean validate() {

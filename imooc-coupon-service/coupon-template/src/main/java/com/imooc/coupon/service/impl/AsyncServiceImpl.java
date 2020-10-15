@@ -5,6 +5,7 @@ import com.imooc.coupon.constant.Constant;
 import com.imooc.coupon.dao.CouponTemplateDao;
 import com.imooc.coupon.entity.CouponTemplate;
 import com.imooc.coupon.service.IAsyncService;
+import com.sun.jmx.remote.internal.ArrayQueue;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,11 +14,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -34,6 +32,7 @@ public class AsyncServiceImpl implements IAsyncService {
     /** 注入 Redis 模板类 */
     private final StringRedisTemplate redisTemplate;
 
+    // 基于构造函数的自动注入方式
     @Autowired
     public AsyncServiceImpl(CouponTemplateDao templateDao,
                             StringRedisTemplate redisTemplate) {
@@ -51,15 +50,15 @@ public class AsyncServiceImpl implements IAsyncService {
     public void asyncConstructCouponByTemplate(CouponTemplate template) {
 
         Stopwatch watch = Stopwatch.createStarted();
-
+        // 这里就是模板对应的所有优惠券码
         Set<String> couponCodes = buildCouponCode(template);
 
-        // imooc_coupon_template_code_1
+        // 把优惠券码放到Redis中，用list存储
         String redisKey = String.format("%s%s",
                 Constant.RedisPrefix.COUPON_TEMPLATE, template.getId().toString());
         log.info("Push CouponCode To Redis: {}",
                 redisTemplate.opsForList().rightPushAll(redisKey, couponCodes));
-
+        // 修改模板的状态为可用
         template.setAvailable(true);
         templateDao.save(template);
 
@@ -69,6 +68,11 @@ public class AsyncServiceImpl implements IAsyncService {
 
         // TODO 发送短信或者邮件通知优惠券模板已经可用
         log.info("CouponTemplate({}) Is Available!", template.getId());
+    }
+
+    @Override
+    public void asyncSendEmails(String s) {
+        // TODO 去做邮件通知
     }
 
     /**
@@ -82,21 +86,34 @@ public class AsyncServiceImpl implements IAsyncService {
      * */
     @SuppressWarnings("all")
     private Set<String> buildCouponCode(CouponTemplate template) {
-
+        // 用来记录耗时
         Stopwatch watch = Stopwatch.createStarted();
 
         Set<String> result = new HashSet<>(template.getCount());
+        Map<Integer,Integer> map = new LinkedHashMap<>();
+        Queue<Integer> deap = new PriorityQueue<>((a,b)->{
+            int x = map.get(a);
+            int y = map.get(b);
+            if (x==y){
+                return a-b;
+            }
+            return y-x;
+        });
+        deap.add(1);
 
+        deap.poll();
         // 前四位
         String prefix4 = template.getProductLine().getCode().toString()
                 + template.getCategory().getCode();
         String date = new SimpleDateFormat("yyMMdd")
                 .format(template.getCreateTime());
 
+        // 先用for去创建一定数量优惠券
         for (int i = 0; i != template.getCount(); ++i) {
             result.add(prefix4 + buildCouponCodeSuffix14(date));
         }
 
+        // 用while去补充之前创建重复的
         while (result.size() < template.getCount()) {
             result.add(prefix4 + buildCouponCodeSuffix14(date));
         }
@@ -116,7 +133,7 @@ public class AsyncServiceImpl implements IAsyncService {
      * @return 14 位优惠券码
      * */
     private String buildCouponCodeSuffix14(String date) {
-
+        // 对日期进行洗牌，加上随机后八位
         char[] bases = new char[]{'1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
         // 中间六位

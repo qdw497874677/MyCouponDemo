@@ -6,7 +6,6 @@ import com.imooc.coupon.vo.TemplateRequest;
 
 /**
  * <h1>构建优惠券模板接口定义</h1>
- * Created by Qinyi.
  */
 public interface IBuildTemplateService {
 

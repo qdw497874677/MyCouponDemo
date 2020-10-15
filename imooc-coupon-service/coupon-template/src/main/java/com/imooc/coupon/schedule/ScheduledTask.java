@@ -15,7 +15,6 @@ import java.util.List;
 
 /**
  * <h1>定时清理已过期的优惠券模板</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Component
@@ -31,6 +30,8 @@ public class ScheduledTask {
 
     /**
      * <h2>下线已过期的优惠券模板</h2>
+     *
+     * 每小时处理下线模板。对于没有过期的去判断是否过期，然后把过期的模板的过期字段改为true
      * */
     @Scheduled(fixedRate = 60 * 60 * 1000)
     public void offlineCouponTemplate() {
@@ -58,6 +59,7 @@ public class ScheduledTask {
             }
         });
 
+        // 把过期的修改信息更新到数据库
         if (CollectionUtils.isNotEmpty(expiredTemplates)) {
             log.info("Expired CouponTemplate Num: {}",
                     templateDao.saveAll(expiredTemplates));

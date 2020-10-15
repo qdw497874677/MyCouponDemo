@@ -16,7 +16,6 @@ import java.util.Map;
 
 /**
  * <h1>健康检查接口</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @RestController

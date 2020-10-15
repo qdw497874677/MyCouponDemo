@@ -15,23 +15,23 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * <h1>自定义异步任务线程池</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @EnableAsync
 @Configuration
 public class AsyncPoolConfig implements AsyncConfigurer {
 
+    // 创建一个异步线程池的Bean
     @Bean
     @Override
     public Executor getAsyncExecutor() {
-
+        // 定义线程池
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
         executor.setMaxPoolSize(20);
         executor.setQueueCapacity(20);
         executor.setKeepAliveSeconds(60);
-        executor.setThreadNamePrefix("ImoocAsync_");
+        executor.setThreadNamePrefix("Async_");
 
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(60);

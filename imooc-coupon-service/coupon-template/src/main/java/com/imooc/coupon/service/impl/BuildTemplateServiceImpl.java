@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 /**
  * <h1>构建优惠券模板接口实现</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Service
@@ -61,7 +60,7 @@ public class BuildTemplateServiceImpl implements IBuildTemplateService {
     }
 
     /**
-     * <h2>将 TemplateRequest 转换为 CouponTemplate</h2>
+     * <h2>将 定义的模板请求类（vo） 转换为 模板类（entity）</h2>
      * */
     private CouponTemplate requestToTemplate(TemplateRequest request) {
 
