@@ -8,14 +8,14 @@ import java.util.stream.Stream;
 
 /**
  * <h1>产品线枚举</h1>
- * Created by Qinyi.
  */
 @Getter
 @AllArgsConstructor
 public enum ProductLine {
 
-    DAMAO("大猫", 1),
-    DABAO("大宝", 2);
+    ZHIFU("支付", 1),
+    LICAI("理财", 2),
+    BAOXIAN("保险", 2);
 
     /** 产品线描述 */
     private String description;

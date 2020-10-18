@@ -14,7 +14,6 @@ import java.util.Map;
 
 /**
  * <h1>优惠券模板 Feign 接口的熔断降级策略</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Component

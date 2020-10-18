@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 /**
  * <h1>分发目标</h1>
- * Created by Qinyi.
  */
 @Getter
 @AllArgsConstructor

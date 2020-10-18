@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * <h1>微服务之间用的优惠券模板信息定义</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor

@@ -8,7 +8,6 @@ import javax.persistence.Converter;
 
 /**
  * <h1>优惠券规则属性转换器</h1>
- * Created by Qinyi.
  */
 @Converter
 public class RuleConverter

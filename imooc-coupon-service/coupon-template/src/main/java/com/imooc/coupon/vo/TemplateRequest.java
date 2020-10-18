@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * <h1>优惠券模板创建请求对象</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor

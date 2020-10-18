@@ -1,6 +1,7 @@
 server:
   port: 7001
   servlet:
+    # 所有controller路径的前缀。让网关来识别微服务
     context-path: /coupon-template
 
 spring:
@@ -16,9 +17,9 @@ spring:
     open-in-view: false
   datasource:
     # 数据源
-    url: jdbc:mysql://127.0.0.1:3306/imooc_coupon_data?autoReconnect=true&useUnicode=true&characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://49.233.90.47:3305/coupon?autoReconnect=true&useUnicode=true&characterEncoding=utf8&useSSL=false
     username: root
-    password: Djangobbs
+    password: 123321
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 连接池
@@ -32,7 +33,7 @@ spring:
       pool-name: ImoocCouponHikariCP
   redis:
     database: 0
-    host: 127.0.0.1
+    host: 49.233.90.47
     port: 6379
     # password:
     # 连接超时时间
@@ -51,6 +52,7 @@ management:
       exposure:
         include: "*"
 
+# 配置监控端点
 info:
   app:
     name: imooc-coupon-template

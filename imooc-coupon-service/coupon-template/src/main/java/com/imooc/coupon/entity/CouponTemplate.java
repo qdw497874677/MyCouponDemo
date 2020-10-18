@@ -30,12 +30,12 @@ import java.util.Date;
 
 /**
  * <h1>优惠券模板实体类定义: 基础属性 + 规则属性</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+// 利用这个对某些列自动赋值
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "coupon_template")
 @JsonSerialize(using = CouponTemplateSerialize.class)
@@ -63,7 +63,7 @@ public class CouponTemplate implements Serializable {
     @Column(name = "logo", nullable = false)
     private String logo;
 
-    /** 优惠券描述 */
+    /** 优惠券描述，因为desc是mysql中的关键字，所以用注解去做映射 */
     @Column(name = "intro", nullable = false)
     private String desc;
 
@@ -82,6 +82,7 @@ public class CouponTemplate implements Serializable {
     private Integer count;
 
     /** 创建时间 */
+    // 自动填充属性
     @CreatedDate
     @Column(name = "create_time", nullable = false)
     private Date createTime;
@@ -120,9 +121,9 @@ public class CouponTemplate implements Serializable {
         this.productLine = ProductLine.of(productLine);
         this.count = count;
         this.userId = userId;
-        // 优惠券模板唯一编码 = 4(产品线和类型) + 8(日期: 20190101) + id(扩充为4位)
+        // 优惠券模板唯一编码 = 4(产品线1位数字和类型3位数字) + 8(日期: 20190101) + id(扩充为4位)
         this.key = productLine.toString() + category +
-                new SimpleDateFormat("yyyyMMdd").format(new Date());
+                new SimpleDateFormat("yyyyMMdd").format(new Date());// 后四位利用数据库中生成的主键，所以后续再去添加
         this.target = DistributeTarget.of(target);
         this.rule = rule;
     }

@@ -10,7 +10,6 @@ import javax.persistence.Converter;
  * AttributeConverter<X, Y>
  * X: 是实体属性的类型
  * Y: 是数据库字段的类型
- * Created by Qinyi.
  */
 @Converter
 public class CouponCategoryConverter

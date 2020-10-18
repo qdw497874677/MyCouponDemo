@@ -38,9 +38,10 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>8.0.12</version>
+<!--            <version>8.0.12</version>-->
             <scope>runtime</scope>
         </dependency>
-        <!-- 通用模块 -->
+        <!-- 通用模块 包含web模块 -->
         <dependency>
             <groupId>com.imooc.coupon</groupId>
             <artifactId>coupon-common</artifactId>

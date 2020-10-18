@@ -9,13 +9,16 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * <h1>全局异常处理</h1>
- * Created by Qinyi.
+ *
+ * 对Controller增强
  */
 @RestControllerAdvice
 public class GlobalExceptionAdvice {
 
     /**
      * <h2>对 CouponException 进行统一处理</h2>
+     *
+     * 如果catch到这种异常，就对调用者发送错误响应
      * */
     @ExceptionHandler(value = CouponException.class)
     public CommonResponse<String> handlerCouponException(

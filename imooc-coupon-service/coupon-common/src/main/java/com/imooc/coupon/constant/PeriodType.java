@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 /**
  * <h1>有效期类型</h1>
- * Created by Qinyi.
  */
 @Getter
 @AllArgsConstructor

@@ -10,7 +10,6 @@ import java.util.Map;
 
 /**
  * <h1>优惠券模板基础(view, delete...)服务定义</h1>
- * Created by Qinyi.
  */
 public interface ITemplateBaseService {
 

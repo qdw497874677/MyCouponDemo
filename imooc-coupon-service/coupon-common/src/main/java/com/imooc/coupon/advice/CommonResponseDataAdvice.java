@@ -12,7 +12,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 /**
  * 统一响应
- * 对ResponseBody进行增强
+ *
+ * 对Controller进行增强，对于返回的ResponseBody去额外处理封装成CommonResponse
  */
 @RestControllerAdvice
 public class CommonResponseDataAdvice implements ResponseBodyAdvice<Object> {

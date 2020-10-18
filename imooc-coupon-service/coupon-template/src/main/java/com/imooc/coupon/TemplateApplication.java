@@ -8,10 +8,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * <h1>模板微服务的启动入口</h1>
- * Created by Qinyi.
  */
+// 定时任务注解
 @EnableScheduling
+// JPA注解
 @EnableJpaAuditing
+
 @EnableEurekaClient
 @SpringBootApplication
 public class TemplateApplication {
