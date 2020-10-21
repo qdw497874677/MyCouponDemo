@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 /**
  * <h1>用户优惠券的状态</h1>
- * Created by Qinyi.
  */
 @Getter
 @AllArgsConstructor
@@ -32,8 +31,11 @@ public enum CouponStatus {
         Objects.requireNonNull(code);
 
         return Stream.of(values())
+                // 过滤等于code的枚举
                 .filter(bean -> bean.code.equals(code))
+                // 拿出一个
                 .findAny()
+                // 如果没有拿出来，就抛出一个异常
                 .orElseThrow(
                         () -> new IllegalArgumentException(code + " not exists")
                 );

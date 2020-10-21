@@ -24,12 +24,12 @@ import java.util.Date;
 
 /**
  * <h1>优惠券(用户领取的优惠券记录)实体表</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+// 自动填充
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "coupon")
 @JsonSerialize(using = CouponSerialize.class)
@@ -53,7 +53,7 @@ public class Coupon {
     @Column(name = "coupon_code", nullable = false)
     private String couponCode;
 
-    /** 领取时间 */
+    /** 领取时间，也就是生成时间 */
     @CreatedDate
     @Column(name = "assign_time", nullable = false)
     private Date assignTime;
@@ -64,6 +64,7 @@ public class Coupon {
     private CouponStatus status;
 
     /** 用户优惠券对应的模板信息 */
+    // 移除映射关系
     @Transient
     private CouponTemplateSDK templateSDK;
 

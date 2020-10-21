@@ -20,7 +20,6 @@ import java.util.Date;
 
 /**
  * <h1>构造优惠券模板服务测试</h1>
- * Created by Qinyi.
  */
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -33,36 +32,39 @@ public class BuildTemplateTest {
     public void testBuildTemplate() throws Exception {
 
         System.out.println(JSON.toJSONString(
-                buildTemplateService.buildTemplate(fakeTemplateRequest())
+                buildTemplateService.buildTemplate(MockTemplateRequest())
         ));
+
+        // 这里休眠，让异步线程处理完异步任务
         Thread.sleep(5000);
     }
 
     /**
-     * <h2>fake TemplateRequest</h2>
+     * <h2>Mock TemplateRequest</h2>
      * */
-    private TemplateRequest fakeTemplateRequest() {
+    private TemplateRequest MockTemplateRequest() {
 
         TemplateRequest request = new TemplateRequest();
         request.setName("优惠券模板-" + new Date().getTime());
-        request.setLogo("http://www.imooc.com");
+        request.setLogo("qdwqdw");
         request.setDesc("这是一张优惠券模板");
         request.setCategory(CouponCategory.MANJIAN.getCode());
-        request.setProductLine(ProductLine.DAMAO.getCode());
+        request.setProductLine(ProductLine.ZHIFU.getCode());
         request.setCount(10000);
         request.setUserId(10001L);  // fake user id
         request.setTarget(DistributeTarget.SINGLE.getCode());
 
         TemplateRule rule = new TemplateRule();
         rule.setExpiration(new TemplateRule.Expiration(
+                // 表示可变过期时间类型，领取后计算过期时间
                 PeriodType.SHIFT.getCode(),
-                1, DateUtils.addDays(new Date(), 60).getTime()
+                /*领取后1天过期*/1, /*最晚过期时间*/DateUtils.addDays(new Date(),60).getTime()
         ));
-        rule.setDiscount(new TemplateRule.Discount(5, 1));
+        rule.setDiscount(new TemplateRule.Discount(/*值*/5, /*基准*/1));
         rule.setLimitation(1);
         rule.setUsage(new TemplateRule.Usage(
-                "安徽省", "桐城市",
-                JSON.toJSONString(Arrays.asList("文娱", "家居"))
+                "陕西省", "西安市",
+                JSON.toJSONString(Arrays.asList("食品", "3C"))
         ));
         rule.setWeight(JSON.toJSONString(Collections.EMPTY_LIST));
 

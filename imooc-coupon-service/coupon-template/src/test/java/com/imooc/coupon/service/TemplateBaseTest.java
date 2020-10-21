@@ -12,7 +12,6 @@ import java.util.Arrays;
 
 /**
  * <h1>优惠券模板基础服务的测试</h1>
- * Created by Qinyi.
  */
 @SpringBootTest
 @RunWith(SpringRunner.class)
@@ -23,7 +22,7 @@ public class TemplateBaseTest {
 
     @Test
     public void testBuildTemplateInfo() throws CouponException {
-
+        // 主键id
         System.out.println(JSON.toJSONString(
                 baseService.buildTemplateInfo( 1)));
         System.out.println(JSON.toJSONString(

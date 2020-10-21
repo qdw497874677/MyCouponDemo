@@ -12,7 +12,6 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * <h1>分发系统的启动入口</h1>
- * Created by Qinyi.
  */
 @EnableJpaAuditing
 @EnableFeignClients
@@ -21,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class DistributionApplication {
 
+    // 定义RestTemplate实例， 通过这个去访问HTTP接口，即可以调用其他微服务。并且开启负载均衡
     @Bean
     @LoadBalanced
     RestTemplate restTemplate() {
