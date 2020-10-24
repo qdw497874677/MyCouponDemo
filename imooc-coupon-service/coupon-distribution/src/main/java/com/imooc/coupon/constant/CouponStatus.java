@@ -8,7 +8,6 @@ import java.util.stream.Stream;
 
 /**
  * <h1>用户优惠券的状态</h1>
- * Created by Qinyi.
  */
 @Getter
 @AllArgsConstructor

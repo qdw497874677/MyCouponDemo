@@ -13,7 +13,6 @@ import java.util.List;
  *  2. 商品信息(列表)
  *  3. 优惠券列表
  *  4. 结算结果金额
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor

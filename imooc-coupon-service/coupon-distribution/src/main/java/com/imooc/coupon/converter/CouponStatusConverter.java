@@ -7,7 +7,6 @@ import javax.persistence.Converter;
 
 /**
  * <h1>优惠券状态枚举属性转换器</h1>
- * Created by Qinyi.
  */
 @Converter
 public class CouponStatusConverter implements

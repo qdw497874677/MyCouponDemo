@@ -6,7 +6,6 @@ import lombok.NoArgsConstructor;
 
 /**
  * <h1>获取优惠券请求对象定义</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor

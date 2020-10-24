@@ -8,17 +8,17 @@ import java.util.stream.Stream;
 
 /**
  * <h1>商品类型枚举</h1>
- * Created by Qinyi.
  */
 @Getter
 @AllArgsConstructor
 public enum GoodsType {
 
     WENYU("文娱", 1),
-    SHENGXIAN("生鲜", 2),
-    JIAJU("家居", 3),
-    OTHERS("其他", 4),
-    ALL("全品类", 5);
+    SHUMA("数码", 2),
+    SHENGXIAN("生鲜", 3),
+    JIAJU("家居", 4),
+    OTHERS("其他", 5),
+    ALL("全品类", 6);
 
     /** 商品类型描述 */
     private String description;

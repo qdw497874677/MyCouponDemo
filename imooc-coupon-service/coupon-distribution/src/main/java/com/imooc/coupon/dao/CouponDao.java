@@ -8,9 +8,8 @@ import java.util.List;
 
 /**
  * <h1>Coupon Dao 接口定义</h1>
- * Created by Qinyi.
  */
-public interface CouponDao extends JpaRepository<Coupon, Integer> {
+public interface CouponDao extends JpaRepository<Coupon, Integer> {// 返回映射的实体类，主键类型
 
     /**
      * <h2>根据 userId + 状态寻找优惠券记录</h2>

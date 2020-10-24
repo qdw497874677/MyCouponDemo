@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 
 /**
  * <h1>Redis 相关的操作服务接口实现</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Service
@@ -51,17 +50,19 @@ public class RedisServiceImpl implements IRedisService {
 
         log.info("Get Coupons From Cache: {}, {}", userId, status);
         String redisKey = status2RedisKey(status, userId);
-
+        // 从Redis取出用户对应优惠券类型的map中的所有value，转换为String类型
         List<String> couponStrs = redisTemplate.opsForHash().values(redisKey)
                 .stream()
                 .map(o -> Objects.toString(o, null))
                 .collect(Collectors.toList());
+        // 如果为空就添加空缓存，防止缓存穿透
         if (CollectionUtils.isEmpty(couponStrs)) {
             saveEmptyCouponListToCache(userId,
                     Collections.singletonList(status));
             return Collections.emptyList();
         }
 
+        // 把JSONString转为优惠券对象
         return couponStrs.stream()
                 .map(cs -> JSON.parseObject(cs, Coupon.class))
                 .collect(Collectors.toList());
@@ -69,6 +70,7 @@ public class RedisServiceImpl implements IRedisService {
 
     /**
      * <h2>保存空的优惠券列表到缓存中</h2>
+     * 对用户的某种优惠券类型key做空缓存，为对应的类型key添加一个map，map中只有key为-1的空优惠券
      * 目的: 避免缓存穿透
      * @param userId 用户 id
      * @param status 优惠券状态列表
@@ -82,6 +84,7 @@ public class RedisServiceImpl implements IRedisService {
 
         // key 是 coupon_id, value 是序列化的 Coupon
         Map<String, String> invalidCouponMap = new HashMap<>();
+        // 避免缓存穿透
         invalidCouponMap.put("-1", JSON.toJSONString(Coupon.invalidCoupon()));
 
         // 用户优惠券缓存信息
@@ -90,6 +93,7 @@ public class RedisServiceImpl implements IRedisService {
         // V: {coupon_id: 序列化的 Coupon}
 
         // 使用 SessionCallback 把数据命令放入到 Redis 的 pipeline
+        // 这里涉及修改多个key，所以将多个key的修改命令放到一起。放到pipeline中可以把多条命令放到一条命令中，减少网络开销
         SessionCallback<Object> sessionCallback = new SessionCallback<Object>() {
             @Override
             public Object execute(RedisOperations operations) throws DataAccessException {
@@ -115,7 +119,7 @@ public class RedisServiceImpl implements IRedisService {
      */
     @Override
     public String tryToAcquireCouponCodeFromCache(Integer templateId) {
-
+        // 组装key
         String redisKey = String.format("%s%s",
                 Constant.RedisPrefix.COUPON_TEMPLATE, templateId.toString());
         // 因为优惠券码不存在顺序关系, 左边 pop 或右边 pop, 没有影响
@@ -129,6 +133,7 @@ public class RedisServiceImpl implements IRedisService {
 
     /**
      * <h2>将优惠券保存到 Cache 中</h2>
+     * 一般就是把新生成的优惠券或者从数据库中查到的优惠券添加到缓存中
      * @param userId  用户 id
      * @param coupons {@link Coupon}s
      * @param status  优惠券状态
@@ -160,14 +165,14 @@ public class RedisServiceImpl implements IRedisService {
     }
 
     /**
-     * <h2>新增加优惠券到 Cache 中</h2>
+     * <h2>新增加可使用优惠券到 Cache 中</h2>
      * */
     private Integer addCouponToCacheForUsable(Long userId, List<Coupon> coupons) {
 
         // 如果 status 是 USABLE, 代表是新增加的优惠券
         // 只会影响一个 Cache: USER_COUPON_USABLE
         log.debug("Add Coupon To Cache For Usable.");
-
+        // 把所有优惠券添加到map中
         Map<String, String> needCachedObject = new HashMap<>();
         coupons.forEach(c ->
                 needCachedObject.put(
@@ -181,6 +186,7 @@ public class RedisServiceImpl implements IRedisService {
         log.info("Add {} Coupons To Cache: {}, {}",
                 needCachedObject.size(), userId, redisKey);
 
+        // 设置随机的过期时间（1小时到2小时）
         redisTemplate.expire(
                 redisKey,
                 getRandomExpirationTime(1, 2),
@@ -217,7 +223,7 @@ public class RedisServiceImpl implements IRedisService {
         );
         // 当前可用的优惠券个数一定是大于1的
         assert curUsableCoupons.size() > coupons.size();
-
+        // 把已使用优惠券添加到Map中
         coupons.forEach(c -> needCachedForUsed.put(
                 c.getId().toString(),
                 JSON.toJSONString(c)
@@ -229,6 +235,7 @@ public class RedisServiceImpl implements IRedisService {
         List<Integer> paramIds = coupons.stream()
                 .map(Coupon::getId).collect(Collectors.toList());
 
+        // 检查已使用优惠券id集合是不是可用优惠券id集合的子集
         if (!CollectionUtils.isSubCollection(paramIds, curUsableIds)) {
             log.error("CurCoupons Is Not Equal ToCache: {}, {}, {}",
                     userId, JSON.toJSONString(curUsableIds),
@@ -236,6 +243,9 @@ public class RedisServiceImpl implements IRedisService {
             throw new CouponException("CurCoupons Is Not Equal To Cache!");
         }
 
+        // 这就是为什么要用Hash去存储优惠券，因为还会对指定的优惠券缓存做删除
+        // 找出所有需要删除的可用优惠券的hash中的key。放到pipeline中去删除可用优惠券hash中的key，在已使用hash中添加key
+        // 同时重置两个hash的过期时间
         List<String> needCleanKey = paramIds.stream()
                 .map(i -> i.toString()).collect(Collectors.toList());
         SessionCallback<Objects> sessionCallback = new SessionCallback<Objects>() {
@@ -288,6 +298,7 @@ public class RedisServiceImpl implements IRedisService {
         // 最终需要保存的 Cache
         Map<String, String> needCachedForExpired = new HashMap<>(coupons.size());
 
+        // 获取两个hash的key
         String redisKeyForUsable = status2RedisKey(
                 CouponStatus.USABLE.getCode(), userId
         );
@@ -364,6 +375,7 @@ public class RedisServiceImpl implements IRedisService {
     private String status2RedisKey(Integer status, Long userId) {
 
         String redisKey = null;
+        // 因为of如果出问题肯定会抛异常，所以如果返回值，肯定不是null
         CouponStatus couponStatus = CouponStatus.of(status);
 
         switch (couponStatus) {
@@ -379,6 +391,7 @@ public class RedisServiceImpl implements IRedisService {
                 redisKey = String.format("%s%s",
                         Constant.RedisPrefix.USER_COUPON_EXPIRED, userId);
                 break;
+            default:
         }
 
         return redisKey;
@@ -386,6 +399,7 @@ public class RedisServiceImpl implements IRedisService {
 
     /**
      * <h2>获取一个随机的过期时间</h2>
+     * 用随机过期缓解缓存雪崩问题
      * 缓存雪崩: key 在同一时间失效
      * @param min 最小的小时数
      * @param max 最大的小时数

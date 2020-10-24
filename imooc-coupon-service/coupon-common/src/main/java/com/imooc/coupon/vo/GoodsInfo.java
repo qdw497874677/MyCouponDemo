@@ -5,8 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * <h1>fake 商品信息</h1>
- * Created by Qinyi.
+ * <h1>mock 商品信息</h1>
  */
 @Data
 @NoArgsConstructor

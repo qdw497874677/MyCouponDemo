@@ -24,7 +24,6 @@ import java.util.Date;
 
 /**
  * <h1>优惠券(用户领取的优惠券记录)实体表</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor

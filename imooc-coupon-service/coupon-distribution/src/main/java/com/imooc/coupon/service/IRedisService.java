@@ -9,7 +9,6 @@ import java.util.List;
  * <h1>Redis 相关的操作服务接口定义</h1>
  * 1. 用户的三个状态优惠券 Cache 相关操作
  * 2. 优惠券模板生成的优惠券码 Cache 操作
- * Created by Qinyi.
  */
 public interface IRedisService {
 
@@ -23,6 +22,7 @@ public interface IRedisService {
 
     /**
      * <h2>保存空的优惠券列表到缓存中</h2>
+     * 这里是为了避免缓存穿透
      * @param userId 用户 id
      * @param status 优惠券状态列表
      * */

@@ -8,7 +8,6 @@ import java.util.List;
 
 /**
  * <h1>优惠券 kafka 消息对象定义</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor

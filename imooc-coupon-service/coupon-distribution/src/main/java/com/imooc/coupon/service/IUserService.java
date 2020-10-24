@@ -14,7 +14,6 @@ import java.util.List;
  * 2. 查看用户当前可以领取的优惠券模板 - coupon-template 微服务配合实现
  * 3. 用户领取优惠券服务
  * 4. 用户消费优惠券服务 - coupon-settlement 微服务配合实现
- * Created by Qinyi.
  */
 public interface IUserService {
 
