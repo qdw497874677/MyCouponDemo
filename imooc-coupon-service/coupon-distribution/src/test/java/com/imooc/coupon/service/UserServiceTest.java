@@ -11,7 +11,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * <h1>用户服务功能测试用例</h1>
- * Created by Qinyi.
  */
 @SpringBootTest
 @RunWith(SpringRunner.class)

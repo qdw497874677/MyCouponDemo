@@ -29,11 +29,13 @@
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
         <!-- 引入服务容错 Hystrix 的依赖 -->
+<!--        实现调用兜底-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-hystrix</artifactId>
         </dependency>
         <!-- 引入服务消费者 Ribbon 的依赖 -->
+<!--        用来发现服务，负载均衡-->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-ribbon</artifactId>

@@ -86,7 +86,6 @@ public class TemplateBaseServiceImpl implements ITemplateBaseService {
      * <h2>将 CouponTemplate 转换为 CouponTemplateSDK</h2>
      * */
     private CouponTemplateSDK template2TemplateSDK(CouponTemplate template) {
-        String id = template.getId()+"";
         return new CouponTemplateSDK(
                 template.getId(),
                 template.getName(),
@@ -95,9 +94,27 @@ public class TemplateBaseServiceImpl implements ITemplateBaseService {
                 template.getCategory().getCode(),
                 template.getProductLine().getCode(),
 //                template.getKey(),  // 并不是拼装好的 Template Key
-                template.getKey()+id.substring(id.length()-4),  // 也可以拼装好
+                template.getKey()+addZeroForNum(template.getId()+"",4),  // 也可以拼装好
                 template.getTarget().getCode(),
                 template.getRule()
         );
     }
+    public static String addZeroForNum(String str, int strLength) {
+        int strLen = str.length();
+        if (strLen < strLength) {
+            while (strLen < strLength) {
+                StringBuffer sb = new StringBuffer();
+                sb.append("0").append(str);// 左补0
+                // sb.append(str).append("0");//右补0
+                str = sb.toString();
+                strLen = str.length();
+            }
+            return str;
+        }else {
+            return str.substring(str.length()-strLength);
+        }
+
+
+    }
+
 }

@@ -63,7 +63,7 @@ public class AsyncServiceImpl implements IAsyncService {
         templateDao.save(template);
 
         watch.stop();
-        log.info("Construct CouponCode By Template Cost: {}ms",
+        log.info("创建优惠券码，并且存储到Redis中 总耗时: {}ms",
                 watch.elapsed(TimeUnit.MILLISECONDS));
 
         // TODO 发送短信或者邮件通知优惠券模板已经可用
