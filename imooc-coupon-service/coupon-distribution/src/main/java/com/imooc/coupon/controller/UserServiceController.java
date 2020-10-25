@@ -19,7 +19,6 @@ import java.util.List;
 
 /**
  * <h1>用户服务 Controller</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @RestController

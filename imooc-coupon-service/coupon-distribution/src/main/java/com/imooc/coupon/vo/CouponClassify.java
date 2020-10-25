@@ -14,7 +14,6 @@ import java.util.List;
 
 /**
  * <h1>用户优惠券的分类, 根据优惠券状态</h1>
- * Created by Qinyi.
  */
 @Data
 @NoArgsConstructor
@@ -46,21 +45,25 @@ public class CouponClassify {
 //            long curTime = new Date().getTime();
             long curTime = System.currentTimeMillis();
 
-            if (c.getTemplateSDK().getRule().getExpiration().getPeriod().equals(
+            if (c.getTemplateSDK().getRule().getExpiration().getPeriod().equals(// 如果是不可变
                     PeriodType.REGULAR.getCode()
             )) {
                 isTimeExpire = c.getTemplateSDK().getRule().getExpiration()
                         .getDeadline() <= curTime;
-            } else {
+            } else {// 如果是可变
+                // 领取时间加上gap，就是这个优惠券的过期时间，比较当前时间
                 isTimeExpire = DateUtils.addDays(
                         c.getAssignTime(),
                         c.getTemplateSDK().getRule().getExpiration().getGap()
                 ).getTime() <= curTime;
+
+                // 再去比较最终的deadline
+                isTimeExpire = isTimeExpire || c.getTemplateSDK().getRule().getExpiration().getDeadline() <= curTime;
             }
 
             if (c.getStatus() == CouponStatus.USED) {
                 used.add(c);
-            } else if (c.getStatus() == CouponStatus.EXPIRED || isTimeExpire) {
+            } else if (c.getStatus() == CouponStatus.EXPIRED || isTimeExpire) {// 把本来就是过期的和刚检测出过期的加入list
                 expired.add(c);
             } else {
                 usable.add(c);

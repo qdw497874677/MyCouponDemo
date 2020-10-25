@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
  * <h1>优惠券结算微服务 Feign 接口定义</h1>
- * Created by Qinyi.
  */
 @FeignClient(value = "eureka-client-coupon-settlement",
         fallback = SettlementClientHystrix.class)

@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 /**
  * <h1>结算微服务熔断策略实现</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Component
@@ -28,7 +27,7 @@ public class SettlementClientHystrix implements SettlementClient {
 
         settlement.setEmploy(false);
         settlement.setCost(-1.0);
-
+        // 返回一个结算结果为负数的结算信息对象
         return new CommonResponse<>(
                 -1,
                 "[eureka-client-coupon-settlement] request error",
