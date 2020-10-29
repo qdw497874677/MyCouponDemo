@@ -58,7 +58,7 @@ public class KafkaServiceImpl implements IKafkaService {
                 case USABLE:// 对于缓存中添加可用的优惠券，一般是将BD中的数据加入到缓存，不需要kafka做异步操作
                     break;
                 // 对于已用优惠券和过期优惠券的修改，一般是去添加对应状态优惠券，并且删除对应可用优惠券，这个操作的本源不是从BD来的，修改完缓存后需要去将更改同步到BD中。
-                case USED:// 关于为什么要再封装一层，是为了针对这两种操作，可以去加上一些额外的逻辑，比如发短信。
+                case USED:// 对两个类型的处理再封装一层，方便去做不同的处理
                     processUsedCoupons(couponInfo, status);
                     break;
                 case EXPIRED:
