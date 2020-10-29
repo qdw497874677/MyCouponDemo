@@ -27,6 +27,7 @@ public class TemplateClientHystrix implements TemplateClient {
 
         log.error("[eureka-client-coupon-template] findAllUsableTemplate " +
                 "request error");
+        // 返回空list
         return new CommonResponse<>(
                 -1,
                 "[eureka-client-coupon-template] request error",
@@ -44,7 +45,7 @@ public class TemplateClientHystrix implements TemplateClient {
 
         log.error("[eureka-client-coupon-template] findIds2TemplateSDK" +
                 "request error");
-
+        // 返回空Map
         return new CommonResponse<>(
                 -1,
                 "[eureka-client-coupon-template] request error",

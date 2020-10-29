@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * <h1>用户服务相关的接口实现</h1>
  * 所有的操作过程, 状态都保存在 Redis 中, 并通过 Kafka 把消息传递到 MySQL 中
  * 为什么使用 Kafka, 而不是直接使用 SpringBoot 中的异步处理 ?
- * Created by Qinyi.
+ * 防止失败，导致一致性问题
  */
 @Slf4j
 @Service
@@ -58,6 +58,7 @@ public class UserServiceImpl implements IUserService {
     private final SettlementClient settlementClient;
 
     /** Kafka 客户端 */
+    // 用来发送消息
     private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
@@ -74,6 +75,7 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * <h2>根据用户 id 和状态查询优惠券记录</h2>
+     *
      * @param userId 用户 id
      * @param status 优惠券状态
      * @return {@link Coupon}s
@@ -82,25 +84,27 @@ public class UserServiceImpl implements IUserService {
     public List<Coupon> findCouponsByStatus(Long userId, Integer status)
             throws CouponException {
 
+        // redisService中获取缓存操作中已经有了添加空缓存的逻辑
         List<Coupon> curCached = redisService.getCachedCoupons(userId, status);
         List<Coupon> preTarget;
 
         if (CollectionUtils.isNotEmpty(curCached)) {
-            log.debug("coupon cache is not empty: {}, {}", userId, status);
+            log.debug("缓存不为空 coupon cache is not empty: {}, {}", userId, status);
             preTarget = curCached;
         } else {
-            log.debug("coupon cache is empty, get coupon from db: {}, {}",
+            log.debug("缓存为空，尝试从DB中获取 coupon cache is empty, get coupon from db: {}, {}",
                     userId, status);
             List<Coupon> dbCoupons = couponDao.findAllByUserIdAndStatus(
                     userId, CouponStatus.of(status)
             );
-            // 如果数据库中没有记录, 直接返回就可以, Cache 中已经加入了一张无效的优惠券
+            // 如果数据库中没有记录, 直接返回就可以, Cache 中已经加入了一张无效的优惠券（在redisService中的获取缓存方法中）
             if (CollectionUtils.isEmpty(dbCoupons)) {
-                log.debug("current user do not have coupon: {}, {}", userId, status);
+                log.debug("用户没有优惠券 current user do not have coupon: {}, {}", userId, status);
                 return dbCoupons;
             }
 
-            // 填充 dbCoupons的 templateSDK 字段
+            // 根据Coupons中的templateId去模板服务中查询模板SDK， 然后填充优惠券对象的 templateSDK 字段
+            // templateSDK 字段是一个transient字段，没有和数据库表做映射
             Map<Integer, CouponTemplateSDK> id2TemplateSDK =
                     templateClient.findIds2TemplateSDK(
                             dbCoupons.stream()
@@ -118,14 +122,14 @@ public class UserServiceImpl implements IUserService {
             redisService.addCouponToCache(userId, preTarget, status);
         }
 
-        // 将无效优惠券剔除
+        // 将无效优惠券剔除。可能是从缓存中来的，如果是缓存了空优惠券，需要从结果中剔除
         preTarget = preTarget.stream()
                 .filter(c -> c.getId() != -1)
                 .collect(Collectors.toList());
-        // 如果当前获取的是可用优惠券, 还需要做对已过期优惠券的延迟处理
+        // 此时获取的如果是可用优惠券，就要去做过期判断的延迟处理。通过CouponClassify对优惠券去分类
         if (CouponStatus.of(status) == CouponStatus.USABLE) {
             CouponClassify classify = CouponClassify.classify(preTarget);
-            // 如果已过期状态不为空, 需要做延迟处理
+            // 把过期状态的优惠券做延迟处理：1.更新Redis缓存 2.发送到Kafka做异步处理
             if (CollectionUtils.isNotEmpty(classify.getExpired())) {
                 log.info("Add Expired Coupons To Cache From FindCouponsByStatus: " +
                         "{}, {}", userId, status);
@@ -135,16 +139,17 @@ public class UserServiceImpl implements IUserService {
                 );
                 // 发送到 kafka 中做异步处理
                 kafkaTemplate.send(
-                        Constant.TOPIC,
+                        Constant.TOPIC,// 这个是为了做分区的。这里填什么无所谓，因为使用默认的分区策略
                         JSON.toJSONString(new CouponKafkaMessage(
-                                CouponStatus.EXPIRED.getCode(),
+                                CouponStatus.EXPIRED.getCode(),// 更新为的状态
                                 classify.getExpired().stream()
                                         .map(Coupon::getId)
-                                        .collect(Collectors.toList())
+                                        .collect(Collectors.toList())// 过期优惠券id的list
                         ))
                 );
             }
 
+            // 这里classify中的可用优惠券就很定是没有过期的了
             return classify.getUsable();
         }
 
@@ -164,54 +169,43 @@ public class UserServiceImpl implements IUserService {
         List<CouponTemplateSDK> templateSDKS =
                 templateClient.findAllUsableTemplate().getData();
 
-        log.debug("Find All Template(From TemplateClient) Count: {}",
+        log.debug("从模板服务取到的模板个数 Find All Template(From TemplateClient) Count: {}",
                 templateSDKS.size());
 
-        // 过滤过期的优惠券模板
+        // 过滤过期的优惠券模板（也是延迟处理，这里只是过滤，对于状态的更改让定时任务去做）
         templateSDKS = templateSDKS.stream().filter(
                 t -> t.getRule().getExpiration().getDeadline() > curTime
         ).collect(Collectors.toList());
 
-        log.info("Find Usable Template Count: {}", templateSDKS.size());
+        log.info("过滤后可用模板个数 Find Usable Template Count: {}", templateSDKS.size());
 
-        // key 是 TemplateId
-        // value 中的 left 是 Template limitation, right 是优惠券模板
-        Map<Integer, Pair<Integer, CouponTemplateSDK>> limit2Template =
-                new HashMap<>(templateSDKS.size());
-        templateSDKS.forEach(
-                t -> limit2Template.put(
-                        t.getId(),
-                        Pair.of(t.getRule().getLimitation(), t)
-                )
-        );
 
         List<CouponTemplateSDK> result =
-                new ArrayList<>(limit2Template.size());
+                new ArrayList<>(templateSDKS.size());
+        // 拿到用户所有的可用优惠券
         List<Coupon> userUsableCoupons = findCouponsByStatus(
                 userId, CouponStatus.USABLE.getCode()
         );
 
-        log.debug("Current User Has Usable Coupons: {}, {}", userId,
+        log.debug("当前用户可用优惠券的数量 Current User Has Usable Coupons: {}, {}", userId,
                 userUsableCoupons.size());
 
-        // key 是 TemplateId
+        // 把用户的所有可用优惠券根据 模板id 分组 放到map中。key为模板id，value为优惠券列表
         Map<Integer, List<Coupon>> templateId2Coupons = userUsableCoupons
                 .stream()
                 .collect(Collectors.groupingBy(Coupon::getTemplateId));
 
-        // 根据 Template 的 Rule 判断是否可以领取优惠券模板
-        limit2Template.forEach((k, v) -> {
 
-            int limitation = v.getLeft();
-            CouponTemplateSDK templateSDK = v.getRight();
-
-            if (templateId2Coupons.containsKey(k)
-                    && templateId2Coupons.get(k).size() >= limitation) {
+        // 根据模板的规则中的限制数量，判断是否可以领取对应优惠券模板的优惠券
+        templateSDKS.forEach((template)->{
+            int id = template.getId();
+            int limitation = template.getRule().getLimitation();
+            // 如果用户有 并且 数量大于等于限制，说明不能领取
+            if (templateId2Coupons.containsKey(id) && templateId2Coupons.get(id).size() >= limitation){
                 return;
             }
-
-            result.add(templateSDK);
-
+            // 把能领取的加入结果中
+            result.add(template);
         });
 
         return result;
@@ -219,7 +213,7 @@ public class UserServiceImpl implements IUserService {
 
     /**
      * <h2>用户领取优惠券</h2>
-     * 1. 从 TemplateClient 拿到对应的优惠券, 并检查是否过期
+     * 1. 从 TemplateClient 拿到对应的优惠券模板, 并检查是否过期
      * 2. 根据 limitation 判断用户是否可以领取
      * 3. save to db
      * 4. 填充 CouponTemplateSDK
@@ -240,9 +234,16 @@ public class UserServiceImpl implements IUserService {
 
         // 优惠券模板是需要存在的
         if (id2Template.size() <= 0) {
-            log.error("Can Not Acquire Template From TemplateClient: {}",
+            log.error("不能获取模板 Can Not Acquire Template From TemplateClient: {}",
                     request.getTemplateSDK().getId());
             throw new CouponException("Can Not Acquire Template From TemplateClient");
+        }
+
+        // 判断是否过期
+        if(id2Template.get(request.getTemplateSDK().getId()).getRule().getExpiration().getDeadline()<=System.currentTimeMillis()){
+            log.error("模板已过期 无法领取 : {}",
+                    request.getTemplateSDK().getId());
+            throw new CouponException("已过期 无法领取");
         }
 
         // 用户是否可以领取这张优惠券
@@ -266,11 +267,11 @@ public class UserServiceImpl implements IUserService {
                 request.getTemplateSDK().getId()
         );
         if (StringUtils.isEmpty(couponCode)) {
-            log.error("Can Not Acquire Coupon Code: {}",
+            log.error("不能获取优惠券码 Can Not Acquire Coupon Code: {}",
                     request.getTemplateSDK().getId());
             throw new CouponException("Can Not Acquire Coupon Code");
         }
-
+        // 拼装优惠券对象
         Coupon newCoupon = new Coupon(
                 request.getTemplateSDK().getId(), request.getUserId(),
                 couponCode, CouponStatus.USABLE
