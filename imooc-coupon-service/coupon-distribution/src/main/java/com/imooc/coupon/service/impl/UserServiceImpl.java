@@ -88,38 +88,53 @@ public class UserServiceImpl implements IUserService {
         List<Coupon> curCached = redisService.getCachedCoupons(userId, status);
         List<Coupon> preTarget;
 
+        // 第一次查询时，里面连空缓存也没有，这时去db中查找。之后的请求发现缓存中有优惠券，就不查db了，后面如果发现只有空缓存，就说明db中也没有
         if (CollectionUtils.isNotEmpty(curCached)) {
             log.debug("缓存不为空 coupon cache is not empty: {}, {}", userId, status);
             preTarget = curCached;
         } else {
-            log.debug("缓存为空，尝试从DB中获取 coupon cache is empty, get coupon from db: {}, {}",
-                    userId, status);
-            List<Coupon> dbCoupons = couponDao.findAllByUserIdAndStatus(
-                    userId, CouponStatus.of(status)
-            );
-            // 如果数据库中没有记录, 直接返回就可以, Cache 中已经加入了一张无效的优惠券（在redisService中的获取缓存方法中）
-            if (CollectionUtils.isEmpty(dbCoupons)) {
-                log.debug("用户没有优惠券 current user do not have coupon: {}, {}", userId, status);
-                return dbCoupons;
+            // 只阻塞从查到redis中没有到设置完空对象之间的请求，如果db中有从db查询出来的到更新到缓存这段时间会有点一致性问题
+            synchronized (this){
+                curCached = redisService.getCachedCoupons(userId, status);
+                if (CollectionUtils.isNotEmpty(curCached)){
+                    log.debug("进入同步 缓存不为空 coupon cache is not empty: {}, {}", userId, status);
+                    preTarget = curCached;
+                }else {
+                    log.debug("添加空缓存: {}, {}",
+                            userId, status);
+                    redisService.saveEmptyCouponListToCache(userId,Collections.singletonList(status));
+                    log.debug("缓存为空，尝试从DB中获取 coupon cache is empty, get coupon from db: {}, {}",
+                            userId, status);
+                    List<Coupon> dbCoupons = couponDao.findAllByUserIdAndStatus(
+                            userId, CouponStatus.of(status)
+                    );
+
+                    // 如果数据库中没有记录, 直接返回就可以, Cache 中已经加入了一张无效的优惠券（在redisService中的获取缓存方法中）
+                    if (CollectionUtils.isEmpty(dbCoupons)) {
+                        log.debug("用户没有优惠券 current user do not have coupon: {}, {}", userId, status);
+                        return dbCoupons;
+                    }
+
+                    // 根据Coupons中的templateId去模板服务中查询模板SDK， 然后填充优惠券对象的 templateSDK 字段
+                    // templateSDK 字段是一个transient字段，没有和数据库表做映射
+                    Map<Integer, CouponTemplateSDK> id2TemplateSDK =
+                            templateClient.findIds2TemplateSDK(
+                                    dbCoupons.stream()
+                                            .map(Coupon::getTemplateId)
+                                            .collect(Collectors.toList())
+                            ).getData();
+                    dbCoupons.forEach(
+                            dc -> dc.setTemplateSDK(
+                                    id2TemplateSDK.get(dc.getTemplateId())
+                            )
+                    );
+                    // 数据库中存在记录
+                    preTarget = dbCoupons;
+                    // 将记录写入 Cache
+                    redisService.addCouponToCache(userId, preTarget, status);
+                }
             }
 
-            // 根据Coupons中的templateId去模板服务中查询模板SDK， 然后填充优惠券对象的 templateSDK 字段
-            // templateSDK 字段是一个transient字段，没有和数据库表做映射
-            Map<Integer, CouponTemplateSDK> id2TemplateSDK =
-                    templateClient.findIds2TemplateSDK(
-                            dbCoupons.stream()
-                                    .map(Coupon::getTemplateId)
-                                    .collect(Collectors.toList())
-                    ).getData();
-            dbCoupons.forEach(
-                    dc -> dc.setTemplateSDK(
-                            id2TemplateSDK.get(dc.getTemplateId())
-                    )
-            );
-            // 数据库中存在记录
-            preTarget = dbCoupons;
-            // 将记录写入 Cache
-            redisService.addCouponToCache(userId, preTarget, status);
         }
 
         // 将无效优惠券剔除。可能是从缓存中来的，如果是缓存了空优惠券，需要从结果中剔除
@@ -187,7 +202,7 @@ public class UserServiceImpl implements IUserService {
                 userId, CouponStatus.USABLE.getCode()
         );
 
-        log.debug("当前用户可用优惠券的数量 Current User Has Usable Coupons: {}, {}", userId,
+        log.debug("当前用户已领取的可用优惠券的数量 Current User Has Usable Coupons: {}, {}", userId,
                 userUsableCoupons.size());
 
         // 把用户的所有可用优惠券根据 模板id 分组 放到map中。key为模板id，value为优惠券列表
@@ -222,7 +237,7 @@ public class UserServiceImpl implements IUserService {
      * @return {@link Coupon}
      */
     @Override
-    public Coupon acquireTemplate(AcquireTemplateRequest request)
+    public Coupon acquireCoupon(AcquireTemplateRequest request)
             throws CouponException {
 
         Map<Integer, CouponTemplateSDK> id2Template =
@@ -301,16 +316,16 @@ public class UserServiceImpl implements IUserService {
     @Override
     public SettlementInfo settlement(SettlementInfo info) throws CouponException {
 
-        // 当没有传递优惠券时, 直接返回商品总价
+        // 当没有传递优惠券时, 就不用调用结算服务了，直接返回商品总价
         List<SettlementInfo.CouponAndTemplateInfo> ctInfos =
                 info.getCouponAndTemplateInfos();
         if (CollectionUtils.isEmpty(ctInfos)) {
 
-            log.info("Empty Coupons For Settle.");
+            log.info("没有使用优惠券 Empty Coupons For Settle.");
             double goodsSum = 0.0;
 
             for (GoodsInfo gi : info.getGoodsInfos()) {
-                goodsSum += gi.getPrice() + gi.getCount();
+                goodsSum += gi.getPrice() * gi.getCount();
             }
 
             // 没有优惠券也就不存在优惠券的核销, SettlementInfo 其他的字段不需要修改
@@ -321,11 +336,13 @@ public class UserServiceImpl implements IUserService {
         List<Coupon> coupons = findCouponsByStatus(
                 info.getUserId(), CouponStatus.USABLE.getCode()
         );
+        // 把用户的优惠券list转成map
         Map<Integer, Coupon> id2Coupon = coupons.stream()
                 .collect(Collectors.toMap(
                         Coupon::getId,
                         Function.identity()
                 ));
+        // 判断结算信息中使用的优惠券 是不是 用户自己的优惠券集合的子集
         if (MapUtils.isEmpty(id2Coupon) || !CollectionUtils.isSubCollection(
                 ctInfos.stream().map(SettlementInfo.CouponAndTemplateInfo::getId)
                 .collect(Collectors.toList()), id2Coupon.keySet()
@@ -334,7 +351,7 @@ public class UserServiceImpl implements IUserService {
             log.info("{}", ctInfos.stream()
                     .map(SettlementInfo.CouponAndTemplateInfo::getId)
                     .collect(Collectors.toList()));
-            log.error("User Coupon Has Some Problem, It Is Not SubCollection" +
+            log.error("优惠券没有匹配 User Coupon Has Some Problem, It Is Not SubCollection" +
                     "Of Coupons!");
             throw new CouponException("User Coupon Has Some Problem, " +
                     "It Is Not SubCollection Of Coupons!");
@@ -342,24 +359,27 @@ public class UserServiceImpl implements IUserService {
 
         log.debug("Current Settlement Coupons Is User's: {}", ctInfos.size());
 
+        // 把结算信息中的优惠券id的list转为优惠券list。得到的就是结算优惠券列表
         List<Coupon> settleCoupons = new ArrayList<>(ctInfos.size());
         ctInfos.forEach(ci -> settleCoupons.add(id2Coupon.get(ci.getId())));
 
-        // 通过结算服务获取结算信息
+        // 通过 结算服务 根据结算信息获取结算后的结算信息。
+        // 结算后得到的结算信息，如果其中的优惠券列表为空，就说明结算出错了（这个逻辑在结算微服务中定义的，就是来表示结算出错）
         SettlementInfo processedInfo =
                 settlementClient.computeRule(info).getData();
+        // 如果结算没出错，且被核销了
         if (processedInfo.getEmploy() && CollectionUtils.isNotEmpty(
                 processedInfo.getCouponAndTemplateInfos()
         )) {
-            log.info("Settle User Coupon: {}, {}", info.getUserId(),
+            log.info("结算了优惠券 Settle User Coupon: {}, {}", info.getUserId(),
                     JSON.toJSONString(settleCoupons));
-            // 更新缓存
+            // 更新缓存，使用了优惠券
             redisService.addCouponToCache(
                     info.getUserId(),
                     settleCoupons,
                     CouponStatus.USED.getCode()
             );
-            // 更新 db
+            // 更新 db。比较耗时，通过mq异步处理
             kafkaTemplate.send(
                     Constant.TOPIC,
                     JSON.toJSONString(new CouponKafkaMessage(

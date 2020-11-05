@@ -43,6 +43,7 @@ public abstract class AbstractZuulFilter extends ZuulFilter {
 
     protected abstract Object cRun();
 
+    // 返回一个http响应，表示错误
     Object fail(int code, String msg) {
 
         context.set(NEXT, false);

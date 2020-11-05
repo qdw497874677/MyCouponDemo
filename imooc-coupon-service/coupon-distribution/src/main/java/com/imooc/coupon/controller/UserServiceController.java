@@ -63,7 +63,7 @@ public class UserServiceController {
             throws CouponException {
 
         log.info("Acquire Template: {}", JSON.toJSONString(request));
-        return userService.acquireTemplate(request);
+        return userService.acquireCoupon(request);
     }
 
     /**

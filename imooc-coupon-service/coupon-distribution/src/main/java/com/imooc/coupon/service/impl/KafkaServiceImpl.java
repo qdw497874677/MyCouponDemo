@@ -12,8 +12,10 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -27,10 +29,14 @@ public class KafkaServiceImpl implements IKafkaService {
 
     /** Coupon Dao */
     private final CouponDao couponDao;
+    /** Kafka 客户端 */
+    // 用来发送消息
+    private final KafkaTemplate<String, String> kafkaTemplate;
 
     @Autowired
-    public KafkaServiceImpl(CouponDao couponDao) {
+    public KafkaServiceImpl(CouponDao couponDao,KafkaTemplate<String,String> kafkaTemplate) {
         this.couponDao = couponDao;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     /**
@@ -107,5 +113,18 @@ public class KafkaServiceImpl implements IKafkaService {
         coupons.forEach(c -> c.setStatus(status));
         log.info("CouponKafkaMessage Op Coupon Count: {}",
                 couponDao.saveAll(coupons).size());
+    }
+
+    /**
+     * <h2>发送Kafka消息</h2>
+     **/
+    private void sendKafkaMsg(Integer couponStatusId,List<Integer> couponIds){
+        kafkaTemplate.send(
+                Constant.TOPIC,
+                JSON.toJSONString(new CouponKafkaMessage(
+                        couponStatusId,
+                        couponIds
+                ))
+        );
     }
 }

@@ -56,11 +56,11 @@ public class RedisServiceImpl implements IRedisService {
                 .map(o -> Objects.toString(o, null))
                 .collect(Collectors.toList());
         // 如果为空就添加空缓存，防止缓存穿透
-        if (CollectionUtils.isEmpty(couponStrs)) {
-            saveEmptyCouponListToCache(userId,
-                    Collections.singletonList(status));
-            return Collections.emptyList();
-        }
+//        if (CollectionUtils.isEmpty(couponStrs)) {
+//            saveEmptyCouponListToCache(userId,
+//                    Collections.singletonList(status));
+//            return Collections.emptyList();
+//        }
 
         // 把JSONString转为优惠券对象
         return couponStrs.stream()

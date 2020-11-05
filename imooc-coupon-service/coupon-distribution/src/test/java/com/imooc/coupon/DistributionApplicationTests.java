@@ -7,7 +7,6 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 /**
  * <h1>分发微服务测试用例环境校验</h1>
- * Created by Qinyi.
  */
 @SpringBootTest
 @RunWith(SpringRunner.class)

@@ -58,6 +58,8 @@ public class AsyncServiceImpl implements IAsyncService {
                 Constant.RedisPrefix.COUPON_TEMPLATE, template.getId().toString());
         log.info("Push CouponCode To Redis: {}",
                 redisTemplate.opsForList().rightPushAll(redisKey, couponCodes));
+
+        redisTemplate.expire(redisKey,System.currentTimeMillis()-template.getRule().getExpiration().getDeadline(),TimeUnit.MILLISECONDS);
         // 修改模板的状态为可用
         template.setAvailable(true);
         templateDao.save(template);

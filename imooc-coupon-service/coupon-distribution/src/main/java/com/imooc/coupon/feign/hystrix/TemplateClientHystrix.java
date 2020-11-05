@@ -1,5 +1,6 @@
 package com.imooc.coupon.feign.hystrix;
 
+import com.imooc.coupon.controller.RibbonController;
 import com.imooc.coupon.feign.TemplateClient;
 import com.imooc.coupon.vo.CommonResponse;
 import com.imooc.coupon.vo.CouponTemplateSDK;
@@ -25,7 +26,7 @@ public class TemplateClientHystrix implements TemplateClient {
     @Override
     public CommonResponse<List<CouponTemplateSDK>> findAllUsableTemplate() {
 
-        log.error("[eureka-client-coupon-template] findAllUsableTemplate " +
+        log.error("服务调用错误 [eureka-client-coupon-template] findAllUsableTemplate " +
                 "request error");
         // 返回空list
         return new CommonResponse<>(
@@ -43,7 +44,7 @@ public class TemplateClientHystrix implements TemplateClient {
     public CommonResponse<Map<Integer, CouponTemplateSDK>>
     findIds2TemplateSDK(Collection<Integer> ids) {
 
-        log.error("[eureka-client-coupon-template] findIds2TemplateSDK" +
+        log.error("服务调用错误 [eureka-client-coupon-template] findIds2TemplateSDK" +
                 "request error");
         // 返回空Map
         return new CommonResponse<>(
@@ -51,5 +52,10 @@ public class TemplateClientHystrix implements TemplateClient {
                 "[eureka-client-coupon-template] request error",
                 new HashMap<>()
         );
+    }
+
+    @Override
+    public CommonResponse<RibbonController.TemplateInfo> getinfo() {
+        return null;
     }
 }

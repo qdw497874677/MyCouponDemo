@@ -8,11 +8,12 @@ import com.imooc.coupon.vo.SettlementInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 /**
  * <h1>满减优惠券结算规则执行器</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Component
@@ -35,35 +36,45 @@ public class ManJianExecutor extends AbstractExecutor implements RuleExecutor {
     @Override
     public SettlementInfo computeRule(SettlementInfo settlement) {
 
-        double goodsSum = retain2Decimals(
+        // 如果之前没有结算过其他优惠券就算物品总价，否则直接使用之前的结算的价格
+        double goodsSum = retain2Decimals(settlement.getCost()<=0?
                 goodsCostSum(settlement.getGoodsInfos())
+                : settlement.getCost()
         );
         SettlementInfo probability = processGoodsTypeNotSatisfy(
                 settlement, goodsSum
         );
         if (null != probability) {
-            log.debug("ManJian Template Is Not Match To GoodsType!");
+            log.debug("满减优惠券不匹配商品 ManJian Template Is Not Match To GoodsType!");
             return probability;
         }
 
-        // 判断满减是否符合折扣标准
+        // 判断满减是否符合折扣标准，先从模版中拿到满减基准和满减额度
         CouponTemplateSDK templateSDK = settlement.getCouponAndTemplateInfos()
                 .get(0).getTemplate();
         double base = (double) templateSDK.getRule().getDiscount().getBase();
         double quota = (double) templateSDK.getRule().getDiscount().getQuota();
 
-        // 如果不符合标准, 则直接返回商品总价
+        settlement.setAvailableCouponAndTemplateInfos(new ArrayList<SettlementInfo.CouponAndTemplateInfo>());
+
+        // 如果不符合标准,即商品总价没有达到满减基准，移除当前不可用优惠券，则直接返回商品总价
         if (goodsSum < base) {
             log.debug("Current Goods Cost Sum < ManJian Coupon Base!");
             settlement.setCost(goodsSum);
-            settlement.setCouponAndTemplateInfos(Collections.emptyList());
+            //settlement.getCouponAndTemplateInfos().remove(0);
+            // 清空结算信息的优惠券
+//            settlement.setCouponAndTemplateInfos(Collections.emptyList());
             return settlement;
         }
 
         // 计算使用优惠券之后的价格 - 结算
         settlement.setCost(retain2Decimals(
-                (goodsSum - quota) > minCost() ? (goodsSum - quota) : minCost()
+                Math.max((goodsSum - quota), minCost())
         ));
+
+        // 表示当前优惠券可使用，移动优惠券集合
+        useCoupon(settlement);
+
         log.debug("Use ManJian Coupon Make Goods Cost From {} To {}",
                 goodsSum, settlement.getCost());
 

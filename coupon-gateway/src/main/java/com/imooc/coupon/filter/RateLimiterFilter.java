@@ -25,12 +25,12 @@ public class RateLimiterFilter extends AbstractPreZuulFilter {
             .build(new CacheLoader<String, RateLimiter>() {
                 @Override
                 public RateLimiter load(String s) throws Exception {
-                    return RateLimiter.create(1.0);// 新的IP初始化 (限流每秒0.1个令牌响应,即10s一个令牌)
+                    return RateLimiter.create(1000.0);// 新的IP初始化 (限流每秒0.1个令牌响应,即10s一个令牌)
                 }
             });
 
     // 每秒可以获取到两个令牌
-    RateLimiter rateLimiter = RateLimiter.create(2.0);
+//    RateLimiter rateLimiter = RateLimiter.create(2.0);
 
     @Override
     protected Object cRun() {

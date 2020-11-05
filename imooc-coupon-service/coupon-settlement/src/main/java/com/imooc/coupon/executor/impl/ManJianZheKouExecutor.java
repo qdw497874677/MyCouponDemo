@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 
 /**
  * <h1>满减 + 折扣优惠券结算规则执行器</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Component
@@ -102,10 +101,11 @@ public class ManJianZheKouExecutor extends AbstractExecutor
         assert null != manJian;
         assert null != zheKou;
 
-        // 当前的折扣优惠券和满减券如果不能共用(一起使用), 清空优惠券, 返回商品原价
+        settlement.setAvailableCouponAndTemplateInfos(new ArrayList<SettlementInfo.CouponAndTemplateInfo>());
+
+        // 当前的折扣优惠券和满减券如果不能共用(一起使用), 删除当前不可用优惠券, 返回商品原价
         if (!isTemplateCanShared(manJian, zheKou)) {
             log.debug("Current ManJian And ZheKou Can Not Shared!");
-            settlement.setCost(goodsSum);
             settlement.setCouponAndTemplateInfos(Collections.emptyList());
             return settlement;
         }
@@ -133,8 +133,12 @@ public class ManJianZheKouExecutor extends AbstractExecutor
 
         settlement.setCouponAndTemplateInfos(ctInfos);
         settlement.setCost(retain2Decimals(
-                targetSum > minCost() ? targetSum : minCost()
+                Math.max(targetSum, minCost())
         ));
+        // 表示当前优惠券可使用，移动优惠券集合
+        useCoupon(settlement);
+        useCoupon(settlement);
+
 
         log.debug("Use ManJian And ZheKou Coupon Make Goods Cost From {} To {}",
                 goodsSum, settlement.getCost());

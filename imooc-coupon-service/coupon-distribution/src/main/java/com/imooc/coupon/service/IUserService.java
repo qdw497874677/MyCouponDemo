@@ -39,7 +39,7 @@ public interface IUserService {
      * @param request {@link AcquireTemplateRequest}
      * @return {@link Coupon}
      * */
-    Coupon acquireTemplate(AcquireTemplateRequest request)
+    Coupon acquireCoupon(AcquireTemplateRequest request)
             throws CouponException;
 
     /**

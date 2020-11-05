@@ -5,6 +5,7 @@ import com.imooc.coupon.constant.CouponCategory;
 import com.imooc.coupon.constant.DistributeTarget;
 import com.imooc.coupon.constant.PeriodType;
 import com.imooc.coupon.constant.ProductLine;
+import com.imooc.coupon.vo.CouponTemplateSDK;
 import com.imooc.coupon.vo.TemplateRequest;
 import com.imooc.coupon.vo.TemplateRule;
 import org.apache.commons.lang3.time.DateUtils;
@@ -17,6 +18,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 /**
  * <h1>构造优惠券模板服务测试</h1>
@@ -27,6 +29,15 @@ public class BuildTemplateTest {
 
     @Autowired
     private IBuildTemplateService buildTemplateService;
+    @Autowired
+    private ITemplateBaseService templateBaseService;
+
+
+    @Test
+    public void test() throws Exception{
+        List<CouponTemplateSDK> allUsableTemplate = templateBaseService.findAllUsableTemplate();
+        System.out.println(allUsableTemplate);
+    }
 
     @Test
     public void testBuildTemplate() throws Exception {

@@ -6,13 +6,13 @@ import com.imooc.coupon.vo.SettlementInfo;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 /**
  * <h1>规则执行器抽象类, 定义通用方法</h1>
- * Created by Qinyi.
  */
 public abstract class AbstractExecutor {
 
@@ -28,8 +28,9 @@ public abstract class AbstractExecutor {
         List<Integer> goodsType = settlement.getGoodsInfos()
                 .stream().map(GoodsInfo::getType)
                 .collect(Collectors.toList());
+        // 拿到优惠券规则中的商品类型id列表
         List<Integer> templateGoodsType = JSON.parseObject(
-                settlement.getCouponAndTemplateInfos().get(0).getTemplate()
+                settlement.getCouponAndTemplateInfos().get(0)/*因为是单品*/.getTemplate()
                         .getRule().getUsage().getGoodsType(),
                 List.class
         );
@@ -52,7 +53,7 @@ public abstract class AbstractExecutor {
 
         boolean isGoodsTypeSatisfy = isGoodsTypeSatisfy(settlement);
 
-        // 当商品类型不满足时, 直接返回总价, 并清空优惠券
+        // 当商品类型不满足时, 直接返回总价, 并清空结算信息中的优惠券
         if (!isGoodsTypeSatisfy) {
             settlement.setCost(goodsSum);
             settlement.setCouponAndTemplateInfos(Collections.emptyList());
@@ -89,4 +90,17 @@ public abstract class AbstractExecutor {
 
         return 0.1;
     }
+
+
+    protected void useCoupon(SettlementInfo settlement){
+        settlement.getAvailableCouponAndTemplateInfos().add(
+                settlement.getCouponAndTemplateInfos().get(0)
+        );
+        ArrayList<SettlementInfo.CouponAndTemplateInfo> newCouponInfos = new ArrayList<>(settlement.getCouponAndTemplateInfos());
+        newCouponInfos.remove(0);
+        settlement.setCouponAndTemplateInfos(
+                newCouponInfos
+        );
+    }
+
 }

@@ -8,9 +8,11 @@ import com.imooc.coupon.vo.SettlementInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
 /**
  * <h1>折扣优惠券结算规则执行器</h1>
- * Created by Qinyi.
  */
 @Slf4j
 @Component
@@ -33,9 +35,10 @@ public class ZheKouExecutor extends AbstractExecutor implements RuleExecutor {
     @Override
     public SettlementInfo computeRule(SettlementInfo settlement) {
 
-        double goodsSum = retain2Decimals(goodsCostSum(
-                settlement.getGoodsInfos()
-        ));
+        double goodsSum = retain2Decimals(settlement.getCost()<=0?
+                goodsCostSum(settlement.getGoodsInfos())
+                : settlement.getCost()
+        );
         SettlementInfo probability = processGoodsTypeNotSatisfy(
                 settlement, goodsSum
         );
@@ -48,13 +51,16 @@ public class ZheKouExecutor extends AbstractExecutor implements RuleExecutor {
         CouponTemplateSDK templateSDK = settlement.getCouponAndTemplateInfos()
                 .get(0).getTemplate();
         double quota = (double) templateSDK.getRule().getDiscount().getQuota();
+        settlement.setAvailableCouponAndTemplateInfos(new ArrayList<SettlementInfo.CouponAndTemplateInfo>());
 
         // 计算使用优惠券之后的价格
         settlement.setCost(
-                retain2Decimals((goodsSum * (quota * 1.0 / 100))) > minCost() ?
-                        retain2Decimals((goodsSum * (quota * 1.0 / 100)))
-                        : minCost()
+                Math.max(retain2Decimals((goodsSum * (quota * 1.0 / 100))), minCost())
         );
+
+        // 表示当前优惠券可使用，移动优惠券集合
+        useCoupon(settlement);
+
         log.debug("Use ZheKou Coupon Make Goods Cost From {} To {}",
                 goodsSum, settlement.getCost());
 

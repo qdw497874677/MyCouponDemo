@@ -22,14 +22,13 @@ import java.util.Collections;
 /**
  * <h1>结算规则执行管理器测试用例</h1>
  * 对 Executor 的分发与结算逻辑进行测试
- * Created by Qinyi.
  */
 @Slf4j
 @SpringBootTest
 @RunWith(SpringRunner.class)
 public class ExecuteManagerTest {
 
-    /** fake 一个 UserId */
+    /** mock 一个 UserId */
     private Long fakeUserId = 20001L;
 
     @Autowired
@@ -46,6 +45,9 @@ public class ExecuteManagerTest {
 //        log.info("{}", result.getCost());
 //        log.info("{}", result.getCouponAndTemplateInfos().size());
 //        log.info("{}", result.getCouponAndTemplateInfos());
+//        log.info("-----------------------------------------------------------");
+//        log.info("{}", result.getAvailableCouponAndTemplateInfos().size());
+//        log.info("{}", result.getAvailableCouponAndTemplateInfos());
 
         // 折扣优惠券结算测试
 //        log.info("ZheKou Coupon Executor Test");
@@ -67,7 +69,7 @@ public class ExecuteManagerTest {
 //        log.info("{}", result.getCouponAndTemplateInfos());
 
         // 满减折扣优惠券结算测试
-        log.info("ManJian ZheKou Coupon Executor Test");
+        log.info("满减折扣优惠券结算测试 ManJian ZheKou Coupon Executor Test");
         SettlementInfo manjianZheKouInfo = fakeManJianAndZheKouCouponSettlement();
 
         SettlementInfo result = manager.computeRule(manjianZheKouInfo);
@@ -75,6 +77,9 @@ public class ExecuteManagerTest {
         log.info("{}", result.getCost());
         log.info("{}", result.getCouponAndTemplateInfos().size());
         log.info("{}", result.getCouponAndTemplateInfos());
+        log.info("-----------------------------------------------------------");
+        log.info("{}", result.getAvailableCouponAndTemplateInfos().size());
+        log.info("{}", result.getAvailableCouponAndTemplateInfos());
     }
 
     /**
@@ -94,9 +99,9 @@ public class ExecuteManagerTest {
 
         GoodsInfo goodsInfo02 = new GoodsInfo();
         // 达到满减标准
-//        goodsInfo02.setCount(10);
+        goodsInfo02.setCount(10);
         // 没有达到满减标准
-        goodsInfo02.setCount(5);
+//        goodsInfo02.setCount(5);
         goodsInfo02.setPrice(20.88);
         goodsInfo02.setType(GoodsType.WENYU.getCode());
 

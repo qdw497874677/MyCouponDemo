@@ -9,6 +9,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.Map;
 public class ExecuteManager implements BeanPostProcessor {
 
     /** 规则执行器映射 */
-    private static Map<RuleFlag, RuleExecutor> executorIndex =
+    public static Map<RuleFlag, RuleExecutor> executorIndex =
             new HashMap<>(RuleFlag.values().length);
 
     /**
@@ -72,6 +73,11 @@ public class ExecuteManager implements BeanPostProcessor {
                     categories.add(CouponCategory.of(
                             ct.getTemplate().getCategory()
                     )));
+
+            // TODO 设计通用的多优惠券执行器，获取最终的结果，优惠券列表中只存在可使用后的优惠券
+//            SettlementInfo settlementInfo = executorIndex.get(RuleFlag.MULT).computeRule(settlement);
+
+
             if (categories.size() != 2) {
                 throw new CouponException("Not Support For More " +
                         "Template Category");
@@ -97,6 +103,7 @@ public class ExecuteManager implements BeanPostProcessor {
     public Object postProcessBeforeInitialization(Object bean, String beanName)
             throws BeansException {
 
+        // 只针对执行器Bean
         if (!(bean instanceof RuleExecutor)) {
             return bean;
         }
@@ -105,12 +112,13 @@ public class ExecuteManager implements BeanPostProcessor {
         RuleFlag ruleFlag = executor.ruleConfig();
 
         if (executorIndex.containsKey(ruleFlag)) {
-            throw new IllegalStateException("There is already an executor" +
+            throw new IllegalStateException("没有对应的执行器 There is already an executor" +
                     "for rule flag: " + ruleFlag);
         }
 
         log.info("Load executor {} for rule flag {}.",
                 executor.getClass(), ruleFlag);
+        // 加入映射
         executorIndex.put(ruleFlag, executor);
 
         return null;

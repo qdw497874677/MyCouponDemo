@@ -5,7 +5,6 @@ import com.imooc.coupon.vo.SettlementInfo;
 
 /**
  * <h1>优惠券模板规则处理器接口定义</h1>
- * Created by Qinyi.
  */
 public interface RuleExecutor {
 

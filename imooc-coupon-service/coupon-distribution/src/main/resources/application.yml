@@ -16,7 +16,7 @@ spring:
     open-in-view: false
   datasource:
     # 数据源
-    url: jdbc:mysql://49.233.90.47:3306/imooc_coupon_data?autoReconnect=true&useUnicode=true&characterEncoding=utf8&useSSL=false
+    url: jdbc:mysql://49.233.90.47:3305/coupon?autoReconnect=true&useUnicode=true&characterEncoding=utf8&useSSL=false
     username: root
     password: 123321
     type: com.zaxxer.hikari.HikariDataSource
@@ -54,20 +54,22 @@ eureka:
   client:
     service-url:
       defaultZone: http://server1:8000/eureka/
+#      defaultZone: http://127.0.0.1:8000/eureka/
 
 logging:
   level:
     com.imooc.coupon: debug
 
+
 # feign 相关的配置
 feign:
   hystrix:
-    enabled: true   # Hystrix 默认是关闭的
+    enabled: false   # Hystrix 默认是关闭的
   client:
     config:
       default:  # 全局的
-        connectTimeout: 2000  # 默认的连接超时时间是 10s
-        readTimeout: 5000
+        connectTimeout: 8000  # 默认的连接超时时间是 10s
+        readTimeout: 8000
       eureka-client-coupon-template:  # 单独服务的配置
-        connectTimeout: 3000  # 默认的连接超时时间是 10s
-        readTimeout: 5000
+        connectTimeout: 8000  # 默认的连接超时时间是 10s
+        readTimeout: 8000
